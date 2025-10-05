@@ -1,4 +1,4 @@
-name: CI/CD — develop → GitHub Pages
+name: CI/CD — main → GitHub Pages
 
 on:
   push:
@@ -19,31 +19,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "18"    # adjust if you need a different Node LTS
+          node-version: "18"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
+      # Lint: uncomment if you add a "lint" script to package.json
       - name: Lint (optional)
         run: npm run lint
-        # remove or set continue-on-error: true if you don't want lint to block
+        continue-on-error: false
 
-      - name: Run unit tests (optional)
-        run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless
-        # remove "|| true" to fail workflow on test failures; keep if you want non-blocking
+      - name: Run unit tests (optional, non-blocking)
+        run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless || true
 
       - name: Build (Angular production)
-        # We force output into ./dist so deploy step is simple.
         run: |
-          # For repository Pages (https://<user>.github.io/<repo>/) we set base-href
-          # github.event.repository.name gives the repo name (e.g. "my-app")
-          # If you host on a user/org site (username.github.io), change --base-href to "/"
+          # For a repo page like https://<user>.github.io/<repo>/:
           npx ng build --configuration production --output-path=dist --base-href="/${{ github.event.repository.name }}/"
+          # If you host to username.github.io change --base-href to "/"
 
       - name: Show built files
         run: ls -la dist || true
@@ -53,6 +53,4 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          # optional:
-          # publish_branch: gh-pages       # default: gh-pages
-          # keep_files: false              # remove files not in this commit (default false)
+          publish_branch: gh-pages

@@ -3,7 +3,7 @@ name: CI/CD — develop → GitHub Pages
 on:
   push:
     branches:
-      - develop
+      - main
 
 permissions:
   contents: read

@@ -1,4 +1,4 @@
-name: CI/CD — main → GitHub Pages
+name: CI/CD — main → GitHub Pages (PAT)
 
 on:
   push:
@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
   id-token: write
 
 jobs:
@@ -22,35 +21,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      # Lint: uncomment if you add a "lint" script to package.json
-      - name: Lint (optional)
-        run: npm run lint
-        continue-on-error: false
+      - name: Build Angular app
+        run: npx ng build --configuration production --output-path=dist --base-href="/${{ github.event.repository.name }}/"
 
-      - name: Run unit tests (optional, non-blocking)
-        run: npm test -- --watch=false --no-progress --browsers=ChromeHeadless || true
-
-      - name: Build (Angular production)
-        run: |
-          # For a repo page like https://<user>.github.io/<repo>/:
-          npx ng build --configuration production --output-path=dist --base-href="/${{ github.event.repository.name }}/"
-          # If you host to username.github.io change --base-href to "/"
-
-      - name: Show built files
-        run: ls -la dist || true
-
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages (using PAT)
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.GH_PAGES_PAT }}
           publish_dir: ./dist
           publish_branch: gh-pages
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
